@@ -159,7 +159,7 @@ engineer_data <- function(data,
       dplyr::group_by(season_year, season_type, team_id) %>%
       dplyr::mutate(
         dplyr::across(
-          dplyr::matches('_game$|_allowed$|_roll|_streak|players_gt|overtime|ratio|perc'),
+          dplyr::matches('_game$|_allowed$|_roll|_streak|players_gt|overtime|ratio|perc|wl'),
           list(lagged = ~dplyr::lag(.x)))) %>%
       dplyr::mutate(
         pts_game_outcome = pts_game,

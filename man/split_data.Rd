@@ -8,8 +8,8 @@ split_data(
   data,
   use_case = "team_games",
   tg_seas_type = "Regular Season",
-  tg_nums = sort(c(1, 5, 11, 23)),
-  tg_testtrain_split_prop = 0.9
+  tg_mod_splits = sort(c(1, 5, 11, 23)),
+  tg_testtrain_split_prop = 0.8
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ split_data(
 
 \item{tg_seas_type}{chr}
 
-\item{tg_nums}{num}
+\item{tg_mod_splits}{num}
 
 \item{tg_testtrain_split_prop}{num}
 }

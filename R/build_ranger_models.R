@@ -21,9 +21,9 @@ build_ranger_models <- function(preprocessed_objects,
       model_list <- list()
       for (o in outcome_vars) {
         if (is.numeric(outcomes[[o]])) {
-          mod <- ranger::ranger(x = predictors, y = outcomes[[o]], num.trees = 1000, importance = 'impurity_corrected')
+          mod <- ranger::ranger(x = predictors, y = outcomes[[o]], importance = 'impurity_corrected')
           } else if (is.factor(outcomes[[o]])) {
-            mod <- ranger::ranger(x = predictors, y = outcomes[[o]], num.trees = 1000, probability = TRUE, importance = 'impurity_corrected')
+            mod <- ranger::ranger(x = predictors, y = outcomes[[o]], probability = TRUE, importance = 'impurity_corrected')
         }
         model_list[[o]] <- mod
       }
