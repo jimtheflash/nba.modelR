@@ -1,5 +1,5 @@
-make_new_glmnet_predictions <- function(use_case = 'team_games',
-                                        glmnet_model_objects, new_data_list) {
+make_new_earth_predictions <- function(use_case = 'team_games',
+                                        earth_model_objects, new_data_list) {
 
   if (use_case == 'team_games') {
 
@@ -15,13 +15,12 @@ make_new_glmnet_predictions <- function(use_case = 'team_games',
       ids <- new_data_list[[nd]] %>%
         dplyr::select(dplyr::ends_with('id')) %>%
         dplyr::mutate(range = nd,
-                      type = 'glmnet')
+                      type = 'earth')
 
       predictors <- new_data_list[[nd]] %>%
-        dplyr::select(-dplyr::ends_with('id')) %>%
-        as.matrix()
+        dplyr::select(-dplyr::ends_with('id'))
 
-      model_list <- glmnet_model_objects[[nd]][['model_list']]
+      model_list <- earth_model_objects[[nd]][['model_list']]
       outcomes <- names(model_list)
 
       for (o in outcomes) {

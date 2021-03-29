@@ -1,12 +1,13 @@
 #' engineer your data for a use case
 #' @importFrom magrittr %>%
-#' @param data data to be engineered
-#' @param use_case which use case to engineer; currently just supports 'team_games'
+#' @param data data.frame data to be engineered
+#' @param use_case chrwhich use case to engineer; currently just supports 'team_games'
+#' @param tg_odds chr data.frame with odds
 #' @return engineered data
 #' @export
 engineer_data <- function(data,
                           use_case = 'team_games',
-                          tg_numerics) {
+                          tg_odds) {
 
   if (use_case == 'team_games') {
 
@@ -178,7 +179,63 @@ engineer_data <- function(data,
         -dplyr::ends_with('overtime')) %>%
       dplyr::ungroup()
 
-    output <- team_games6
+
+
+# team_games7 -------------------------------------------------------------
+# browser()
+    # this chain adds odds
+    team_games7 <- team_games6 %>%
+      dplyr::inner_join(odds_data) %>%
+      dplyr::select(-dplyr::any_of('bookmaker_spread_line_delta_perc'))
+
+
+# team_games8 -------------------------------------------------------------
+
+    # this chain engineers team-opponent rolling features
+    team_games8 <- team_games7 %>%
+      dplyr::mutate(
+        delta_pts_game_lagged = pts_game_lagged - opp_pts_game_lagged,
+        delta_pts_game_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_lagged,
+
+        delta_fg_pct_game_lagged = fg_pct_game_lagged - opp_fg_pct_game_lagged,
+        delta_fg_pct_game_rollmean_5_lagged = fg_pct_game_rollmean_5_lagged - opp_fg_pct_game_rollmean_5_lagged,
+        delta_fg_pct_game_rollmean_11_lagged = fg_pct_game_rollmean_11_lagged - opp_fg_pct_game_rollmean_11_lagged,
+        delta_fg_pct_game_rollmean_23_lagged = fg_pct_game_rollmean_23_lagged - opp_fg_pct_game_rollmean_23_lagged,
+
+        delta_fg3_pct_game_lagged = fg3_pct_game_lagged - opp_fg3_pct_game_lagged,
+        delta_fg3_pct_game_rollmean_5_lagged = fg3_pct_game_rollmean_5_lagged - opp_fg3_pct_game_rollmean_5_lagged,
+        delta_fg3_pct_game_rollmean_11_lagged = fg3_pct_game_rollmean_11_lagged - opp_fg3_pct_game_rollmean_11_lagged,
+        delta_fg3_pct_game_rollmean_23_lagged = fg3_pct_game_rollmean_23_lagged - opp_fg3_pct_game_rollmean_23_lagged,
+
+        delta_reb_game_lagged = reb_game_lagged - opp_reb_game_lagged,
+        delta_reb_game_rollmean_5_lagged = reb_game_rollmean_5_lagged - opp_reb_game_rollmean_5_lagged,
+        delta_reb_game_rollmean_11_lagged = reb_game_rollmean_11_lagged - opp_reb_game_rollmean_11_lagged,
+        delta_reb_game_rollmean_23_lagged = reb_game_rollmean_23_lagged - opp_reb_game_rollmean_23_lagged,
+
+        delta_ast_game_lagged = ast_game_lagged - opp_ast_game_lagged,
+        delta_ast_game_rollmean_5_lagged = ast_game_rollmean_5_lagged - opp_ast_game_rollmean_5_lagged,
+        delta_ast_game_rollmean_11_lagged = ast_game_rollmean_11_lagged - opp_ast_game_rollmean_11_lagged,
+        delta_ast_game_rollmean_23_lagged = ast_game_rollmean_23_lagged - opp_ast_game_rollmean_23_lagged,
+
+        delta_stl_game_lagged = stl_game_lagged - opp_stl_game_lagged,
+        delta_stl_game_rollmean_5_lagged = stl_game_rollmean_5_lagged - opp_stl_game_rollmean_5_lagged,
+        delta_stl_game_rollmean_11_lagged = stl_game_rollmean_11_lagged - opp_stl_game_rollmean_11_lagged,
+        delta_stl_game_rollmean_23_lagged = stl_game_rollmean_23_lagged - opp_stl_game_rollmean_23_lagged,
+
+        delta_pts_game_lagged = pts_game_lagged - opp_pts_game_lagged,
+        delta_pts_game_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_lagged,
+
+        delta_pts_game_vs_opp_pts_game_allowed_lagged = pts_game_lagged - opp_pts_game_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_allowed_lagged
+      )
+
+    output <- team_games8
 
   }
 

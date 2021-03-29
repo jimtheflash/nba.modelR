@@ -1,5 +1,5 @@
-make_new_glmnet_predictions <- function(use_case = 'team_games',
-                                        glmnet_model_objects, new_data_list) {
+make_new_ranger_predictions <- function(use_case = 'team_games',
+                                       ranger_model_objects, new_data_list) {
 
   if (use_case == 'team_games') {
 
@@ -15,18 +15,22 @@ make_new_glmnet_predictions <- function(use_case = 'team_games',
       ids <- new_data_list[[nd]] %>%
         dplyr::select(dplyr::ends_with('id')) %>%
         dplyr::mutate(range = nd,
-                      type = 'glmnet')
+                      type = 'ranger')
 
       predictors <- new_data_list[[nd]] %>%
-        dplyr::select(-dplyr::ends_with('id')) %>%
-        as.matrix()
+        dplyr::select(-dplyr::ends_with('id'))
 
-      model_list <- glmnet_model_objects[[nd]][['model_list']]
+      model_list <- ranger_model_objects[[nd]][['model_list']]
       outcomes <- names(model_list)
 
       for (o in outcomes) {
 
-        new_preds <- as.numeric(predict(model_list[[o]], predictors, type = 'response'))
+        new_preds <- predict(model_list[[o]], predictors, type = 'response')$predictions
+
+        if (inherits(new_preds, 'matrix') && ncol(new_preds) == 2) {
+          new_preds <- as.numeric(new_preds[, "TRUE"])
+        }
+
         ids[[o]] <- new_preds
 
       }

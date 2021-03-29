@@ -4,12 +4,14 @@
 \alias{engineer_data}
 \title{engineer your data for a use case}
 \usage{
-engineer_data(data, use_case = "team_games", tg_numerics)
+engineer_data(data, use_case = "team_games", tg_odds)
 }
 \arguments{
-\item{data}{data to be engineered}
+\item{data}{data.frame data to be engineered}
 
-\item{use_case}{which use case to engineer; currently just supports 'team_games'}
+\item{use_case}{chrwhich use case to engineer; currently just supports 'team_games'}
+
+\item{tg_odds}{chr data.frame with odds}
 }
 \value{
 engineered data

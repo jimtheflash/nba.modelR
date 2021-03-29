@@ -20,12 +20,13 @@ preproc_data <- function(data_list,
 
       # nuke mostly empty columns
       df <- data_list[[i]]$train[, !apply(data_list[[i]]$train, 2, function(x) sum(is.na(x)) / length(x) > na_perc)]
+      df <- na.omit(df)
 
       # build a recipe with the remaining columns' completed cases
       rec <- recipes::recipe(df) %>%
         recipes::update_role(dplyr::ends_with('outcome'), new_role = 'outcome') %>%
         recipes::update_role(-recipes::all_outcomes(), new_role = 'predictor') %>%
-        recipes::update_role(season_year, game_date, dplyr::matches('_id'), dplyr::matches('_index'), new_role = 'id_vars') %>%
+        recipes::update_role(season_year, game_date, dplyr::matches('team'), dplyr::matches('_id'), dplyr::matches('_name'), dplyr::matches('_index'), new_role = 'id_vars') %>%
         recipes::update_role(season_type, new_role = 'split_vars') %>%
         recipes::step_date(game_date, features = "dow") %>%
         recipes::step_date(game_date, features = "month") %>%
