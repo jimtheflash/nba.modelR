@@ -182,12 +182,11 @@ engineer_data <- function(data,
 
 
 # team_games7 -------------------------------------------------------------
-# browser()
-    # this chain adds odds
+
+    # this chain adds odds; model performance drops ~10% without this
     team_games7 <- team_games6 %>%
       dplyr::inner_join(odds_data) %>%
-      dplyr::select(-dplyr::any_of('bookmaker_spread_line_delta_perc'))
-
+      dplyr::select(-dplyr::any_of('bookmaker_spread_line_delta_perc')) #TODO: fix this in the odds generation files
 
 # team_games8 -------------------------------------------------------------
 
@@ -224,6 +223,21 @@ engineer_data <- function(data,
         delta_stl_game_rollmean_11_lagged = stl_game_rollmean_11_lagged - opp_stl_game_rollmean_11_lagged,
         delta_stl_game_rollmean_23_lagged = stl_game_rollmean_23_lagged - opp_stl_game_rollmean_23_lagged,
 
+        delta_tov_game_lagged = tov_game_lagged - opp_tov_game_lagged,
+        delta_tov_game_rollmean_5_lagged = tov_game_rollmean_5_lagged - opp_tov_game_rollmean_5_lagged,
+        delta_tov_game_rollmean_11_lagged = tov_game_rollmean_11_lagged - opp_tov_game_rollmean_11_lagged,
+        delta_tov_game_rollmean_23_lagged = tov_game_rollmean_23_lagged - opp_tov_game_rollmean_23_lagged,
+
+        delta_pf_game_lagged = pf_game_lagged - opp_pf_game_lagged,
+        delta_pf_game_rollmean_5_lagged = pf_game_rollmean_5_lagged - opp_pf_game_rollmean_5_lagged,
+        delta_pf_game_rollmean_11_lagged = pf_game_rollmean_11_lagged - opp_pf_game_rollmean_11_lagged,
+        delta_pf_game_rollmean_23_lagged = pf_game_rollmean_23_lagged - opp_pf_game_rollmean_23_lagged,
+
+        delta_pfd_game_lagged = pfd_game_lagged - opp_pfd_game_lagged,
+        delta_pfd_game_rollmean_5_lagged = pfd_game_rollmean_5_lagged - opp_pfd_game_rollmean_5_lagged,
+        delta_pfd_game_rollmean_11_lagged = pfd_game_rollmean_11_lagged - opp_pfd_game_rollmean_11_lagged,
+        delta_pfd_game_rollmean_23_lagged = pfd_game_rollmean_23_lagged - opp_pfd_game_rollmean_23_lagged,
+
         delta_pts_game_lagged = pts_game_lagged - opp_pts_game_lagged,
         delta_pts_game_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_lagged,
         delta_pts_game_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_lagged,
@@ -232,7 +246,12 @@ engineer_data <- function(data,
         delta_pts_game_vs_opp_pts_game_allowed_lagged = pts_game_lagged - opp_pts_game_allowed_lagged,
         delta_pts_game_vs_opp_pts_game_allowed_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_allowed_lagged,
         delta_pts_game_vs_opp_pts_game_allowed_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_allowed_lagged,
-        delta_pts_game_vs_opp_pts_game_allowed_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_allowed_lagged
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_allowed_lagged,
+
+        delta_pts_game_allowed_vs_opp_pts_game_lagged = pts_game_allowed_lagged - opp_pts_game_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_5_lagged = pts_game_rollmean_5_allowed_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_11_lagged = pts_game_rollmean_11_allowed_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_23_lagged = pts_game_rollmean_23_allowed_lagged - opp_pts_game_rollmean_23_lagged
       )
 
     output <- team_games8

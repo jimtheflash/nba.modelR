@@ -68,3 +68,27 @@ rollcount_days_p <- function(x, date_index, p, ...) {
     ...
   )
 }
+
+make_long_schedule <- function(schedule) {
+
+  home <- schedule %>%
+    dplyr::transmute(
+      game_id,
+      game_date,
+      team_id = home_team_id,
+      opp_team_id = visitor_team_id,
+      home_away = 'home'
+    )
+
+  away <- schedule %>%
+    dplyr::transmute(
+      game_id,
+      game_date,
+      team_id = visitor_team_id,
+      opp_team_id = home_team_id,
+      home_away = 'away'
+    )
+
+  dplyr::bind_rows(home, away)
+
+}

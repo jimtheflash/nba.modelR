@@ -28,22 +28,22 @@ preproc_data <- function(data_list,
         recipes::update_role(-recipes::all_outcomes(), new_role = 'predictor') %>%
         recipes::update_role(season_year, game_date, dplyr::matches('team'), dplyr::matches('_id'), dplyr::matches('_name'), dplyr::matches('_index'), new_role = 'id_vars') %>%
         recipes::update_role(season_type, new_role = 'split_vars') %>%
+        recipes::step_zv(recipes::all_predictors()) %>%
         recipes::step_date(game_date, features = "dow") %>%
         recipes::step_date(game_date, features = "month") %>%
         recipes::step_holiday(game_date) %>%
         recipes::step_rm(game_date) %>%
-        recipes::step_dummy(recipes::all_predictors(), -recipes::all_numeric(), one_hot = TRUE) %>%
         recipes::step_naomit(recipes::all_predictors()) %>%
-        recipes::step_zv(recipes::all_predictors()) %>%
-        recipes::step_nzv(recipes::all_predictors(), freq_cut = 999, unique_cut = 0.2) %>%
+        recipes::step_string2factor(home_away, wl_lagged) %>%
+        recipes::step_dummy(recipes::all_predictors(), -recipes::all_numeric()) %>%
         recipes::step_lincomb(recipes::all_predictors()) %>%
         recipes::step_corr(recipes::all_predictors(), threshold = highcorr_thresh) %>%
-        recipes::prep()
+        recipes::prep(strings_as_factors = FALSE)
 
         baked_train <- recipes::bake(rec, df)
         baked_test <- recipes::bake(rec, data_list[[i]]$test)
 
-        output_list[[i]] <- list(
+         output_list[[i]] <- list(
           recipe = rec,
           training = baked_train,
           testing = baked_test)

@@ -1,11 +1,12 @@
 #' engineer new data for forecasts
 #' @param use_case chr
 #' @param schedule data.frame
+#' @param odds data.frame
 #' @param data data.frame
 #' @return list
 #' @export
 engineer_new_data <- function(use_case = 'team_games',
-                              schedule, data) {
+                              schedule, odds, data) {
 
   if (use_case == 'team_games') {
 
@@ -14,7 +15,7 @@ engineer_new_data <- function(use_case = 'team_games',
       dplyr::mutate(home_away = dplyr::if_else(grepl('@', matchup), 'away', 'home')) %>%
       dplyr::filter(season_year == max(season_year))
 
-    # team_games1 -------------------------------------------------------------
+# team_games1 -------------------------------------------------------------
 
     # this chain results in df at the team-game level with minimal engineering
     team_games1 <- eng_data %>%
@@ -49,7 +50,7 @@ engineer_new_data <- function(use_case = 'team_games',
       dplyr::select(-min_game) %>%
       dplyr::ungroup()
 
-    # team_games2 -------------------------------------------------------------
+# team_games2 -------------------------------------------------------------
 
     # this chain applies a bunch of order-dependent and rolling window functions within team-seasons
     ## make some function lists
@@ -100,7 +101,7 @@ engineer_new_data <- function(use_case = 'team_games',
       dplyr::select(-home, -away, -win, -lose) %>%
       dplyr::ungroup()
 
-    # team_games3 -------------------------------------------------------------
+# team_games3 -------------------------------------------------------------
 
     # this chain joins the team_games data back onto itself but with the opponent's team_id, to get defensive (i.e. 'allowed') metrics
     team_games3 <- team_games2 %>%
@@ -121,9 +122,9 @@ engineer_new_data <- function(use_case = 'team_games',
     fixed_names3 <- gsub('.y', '_allowed', fixed_names3, fixed = TRUE)
     names(team_games3) <- fixed_names3
 
-    # team_games4 -------------------------------------------------------------
+# team_games4 -------------------------------------------------------------
 
-    # this chain engineers game-level data (i.e. team vs. opponent stuff)
+    # this chain engineers game-level data (i.e. team vs. allowed stuff)
     team_games4 <- team_games3 %>%
       dplyr::mutate(score_margin_game = pts_game - pts_game_allowed) %>%
       dplyr::group_by(season_year, season_type, team_id) %>%
@@ -131,26 +132,31 @@ engineer_new_data <- function(use_case = 'team_games',
         dplyr::across(score_margin_game, rolling_funs_list)) %>%
       dplyr::ungroup()
 
-    # team_games4_2 -----------------------------------------------------------
+# team_games4_2 -----------------------------------------------------------
 
-    # this chain filters the historical data to the most recent observation, and adds the schedule for joining
+    # this chain filters the historical data to the most recent observation
     team_games4_2 <- team_games4 %>%
       dplyr::mutate(ha_placeholder = home_away) %>%
       dplyr::group_by(team_id) %>%
       dplyr::filter(game_date == max(game_date)) %>% # this only gets the latest offense/defense
       dplyr::select(-game_date, -game_id, -home_away) %>%
-      dplyr::ungroup() %>%
-      dplyr::inner_join(
-        schedule,
-        by = 'team_id'
-      )
+      dplyr::ungroup()
 
-    # team_games5 -------------------------------------------------------------
+# team_games4_3 -----------------------------------------------------------
+
+    # this chain adds the schedule for joining current game opponents
+    long_schedule <- make_long_schedule(schedule)
+
+    team_games4_3 <- team_games4_2 %>%
+      dplyr::inner_join(long_schedule)
+
+
+# team_games5 -------------------------------------------------------------
 
     # this chain joins opponent's offensive and defensive historical performance
-    team_games5 <- team_games4_2 %>%
+    team_games5 <- team_games4_3 %>%
       dplyr::inner_join(
-        team_games4_2 %>%
+        team_games4_3 %>%
           dplyr::select(-season_year, -season_type, -game_date, -home_away, -wl),
         by = c('team_id' = 'opp_team_id')) %>%
       dplyr::select(-opp_team_id)
@@ -163,16 +169,89 @@ engineer_new_data <- function(use_case = 'team_games',
 
     names(team_games5) <- fixed_names5
 
-    # team_games5_2 -----------------------------------------------------------
+# team_games6 -----------------------------------------------------------
+
+    # this chain calculates rolling team vs. current opponent stuff
+    team_games6 <- team_games5 %>%
+      dplyr::mutate(
+        delta_pts_game_lagged = pts_game_lagged - opp_pts_game_lagged,
+        delta_pts_game_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_lagged,
+
+        delta_fg_pct_game_lagged = fg_pct_game_lagged - opp_fg_pct_game_lagged,
+        delta_fg_pct_game_rollmean_5_lagged = fg_pct_game_rollmean_5_lagged - opp_fg_pct_game_rollmean_5_lagged,
+        delta_fg_pct_game_rollmean_11_lagged = fg_pct_game_rollmean_11_lagged - opp_fg_pct_game_rollmean_11_lagged,
+        delta_fg_pct_game_rollmean_23_lagged = fg_pct_game_rollmean_23_lagged - opp_fg_pct_game_rollmean_23_lagged,
+
+        delta_fg3_pct_game_lagged = fg3_pct_game_lagged - opp_fg3_pct_game_lagged,
+        delta_fg3_pct_game_rollmean_5_lagged = fg3_pct_game_rollmean_5_lagged - opp_fg3_pct_game_rollmean_5_lagged,
+        delta_fg3_pct_game_rollmean_11_lagged = fg3_pct_game_rollmean_11_lagged - opp_fg3_pct_game_rollmean_11_lagged,
+        delta_fg3_pct_game_rollmean_23_lagged = fg3_pct_game_rollmean_23_lagged - opp_fg3_pct_game_rollmean_23_lagged,
+
+        delta_reb_game_lagged = reb_game_lagged - opp_reb_game_lagged,
+        delta_reb_game_rollmean_5_lagged = reb_game_rollmean_5_lagged - opp_reb_game_rollmean_5_lagged,
+        delta_reb_game_rollmean_11_lagged = reb_game_rollmean_11_lagged - opp_reb_game_rollmean_11_lagged,
+        delta_reb_game_rollmean_23_lagged = reb_game_rollmean_23_lagged - opp_reb_game_rollmean_23_lagged,
+
+        delta_ast_game_lagged = ast_game_lagged - opp_ast_game_lagged,
+        delta_ast_game_rollmean_5_lagged = ast_game_rollmean_5_lagged - opp_ast_game_rollmean_5_lagged,
+        delta_ast_game_rollmean_11_lagged = ast_game_rollmean_11_lagged - opp_ast_game_rollmean_11_lagged,
+        delta_ast_game_rollmean_23_lagged = ast_game_rollmean_23_lagged - opp_ast_game_rollmean_23_lagged,
+
+        delta_stl_game_lagged = stl_game_lagged - opp_stl_game_lagged,
+        delta_stl_game_rollmean_5_lagged = stl_game_rollmean_5_lagged - opp_stl_game_rollmean_5_lagged,
+        delta_stl_game_rollmean_11_lagged = stl_game_rollmean_11_lagged - opp_stl_game_rollmean_11_lagged,
+        delta_stl_game_rollmean_23_lagged = stl_game_rollmean_23_lagged - opp_stl_game_rollmean_23_lagged,
+
+        delta_tov_game_lagged = tov_game_lagged - opp_tov_game_lagged,
+        delta_tov_game_rollmean_5_lagged = tov_game_rollmean_5_lagged - opp_tov_game_rollmean_5_lagged,
+        delta_tov_game_rollmean_11_lagged = tov_game_rollmean_11_lagged - opp_tov_game_rollmean_11_lagged,
+        delta_tov_game_rollmean_23_lagged = tov_game_rollmean_23_lagged - opp_tov_game_rollmean_23_lagged,
+
+        delta_pf_game_lagged = pf_game_lagged - opp_pf_game_lagged,
+        delta_pf_game_rollmean_5_lagged = pf_game_rollmean_5_lagged - opp_pf_game_rollmean_5_lagged,
+        delta_pf_game_rollmean_11_lagged = pf_game_rollmean_11_lagged - opp_pf_game_rollmean_11_lagged,
+        delta_pf_game_rollmean_23_lagged = pf_game_rollmean_23_lagged - opp_pf_game_rollmean_23_lagged,
+
+        delta_pfd_game_lagged = pfd_game_lagged - opp_pfd_game_lagged,
+        delta_pfd_game_rollmean_5_lagged = pfd_game_rollmean_5_lagged - opp_pfd_game_rollmean_5_lagged,
+        delta_pfd_game_rollmean_11_lagged = pfd_game_rollmean_11_lagged - opp_pfd_game_rollmean_11_lagged,
+        delta_pfd_game_rollmean_23_lagged = pfd_game_rollmean_23_lagged - opp_pfd_game_rollmean_23_lagged,
+
+        delta_pts_game_lagged = pts_game_lagged - opp_pts_game_lagged,
+        delta_pts_game_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_lagged,
+
+        delta_pts_game_vs_opp_pts_game_allowed_lagged = pts_game_lagged - opp_pts_game_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_5_lagged = pts_game_rollmean_5_lagged - opp_pts_game_rollmean_5_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_11_lagged = pts_game_rollmean_11_lagged - opp_pts_game_rollmean_11_allowed_lagged,
+        delta_pts_game_vs_opp_pts_game_allowed_rollmean_23_lagged = pts_game_rollmean_23_lagged - opp_pts_game_rollmean_23_allowed_lagged,
+
+        delta_pts_game_allowed_vs_opp_pts_game_lagged = pts_game_allowed_lagged - opp_pts_game_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_5_lagged = pts_game_rollmean_5_allowed_lagged - opp_pts_game_rollmean_5_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_11_lagged = pts_game_rollmean_11_allowed_lagged - opp_pts_game_rollmean_11_lagged,
+        delta_pts_game_allowed_vs_opp_pts_game_rollmean_23_lagged = pts_game_rollmean_23_allowed_lagged - opp_pts_game_rollmean_23_lagged
+      )
+
+
+# team_games7 -------------------------------------------------------------
+
+    # this chain adds the new odds data
+    team_games7 <- team_games6 %>%
+      dplyr::inner_join(odds)
+
+# team_games8 -------------------------------------------------------------
 
     # this chain increments game indices
-    team_games5_2 <- team_games5 %>%
+    team_games8 <- team_games7 %>%
       dplyr::mutate(
         season_type_game_index = season_type_game_index + 1,
         opp_season_type_game_index = opp_season_type_game_index + 1
       )
 
-    return(team_games5_2)
+    return(team_games7)
 
   }
 
