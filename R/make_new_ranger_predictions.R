@@ -24,7 +24,7 @@ make_new_ranger_predictions <- function(use_case = 'team_games',
       outcomes <- names(model_list)
 
       for (o in outcomes) {
-
+browser()
         new_preds <- predict(model_list[[o]], predictors, type = 'response')$predictions
 
         if (inherits(new_preds, 'matrix') && ncol(new_preds) == 2) {

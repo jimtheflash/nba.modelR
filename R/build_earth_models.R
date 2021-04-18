@@ -21,9 +21,11 @@ build_earth_models <- function(preprocessed_objects,
       model_list <- list()
       for (o in outcome_vars) {
         if (is.numeric(outcomes[[o]])) {
-          mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 1, nfold = 3)
+          mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 2, nfold = 3)
+          # mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 2, nfold = 3, ncross = 10, varmod.method = 'earth')
         } else if (is.factor(outcomes[[o]])) {
-          mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 1, glm = list(family = binomial), nfold = 3)
+          mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 2, glm = list(family = binomial), nfold = 3)
+          # mod <- earth::earth(x = predictors, y = outcomes[[o]], degree = 2, glm = list(family = binomial), nfold = 3, ncross = 10, varmod.method = 'earth')
         }
         model_list[[o]] <- mod
       }

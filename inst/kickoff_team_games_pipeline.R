@@ -6,7 +6,7 @@ devtools::load_all()
 # can set these in a yaml or something, and fix cases
 datefields <- c('game_date')
 numfields <- c('min', 'fgm', 'fga', 'fg_pct', 'fg3m', 'fg3a', 'fg3_pct', 'ftm', 'fta', 'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'tov', 'stl', 'blk', 'blka', 'pf', 'pfd', 'pts', 'nba_fantasy_pts', 'dd2', 'td3', 'fd', 'dk')
-team_game_model_splits <- sort(c(23, 80))
+team_game_model_splits <- sort(c(25, 81))
 
 ## import
 raw_data <- get_data(data_path = '/Users/jim/Documents/gambling_stuff/data/nba_gamelogs')
@@ -31,14 +31,15 @@ splitted_data <- split_data(engineered_data,
                             tg_mod_splits = team_game_model_splits)
 ### recipes to recode, zv, nzv, lincomb, highcorr, scale, etc
 preproc_objects <- preproc_data(splitted_data,
-                                highcorr_thresh = .85,
+                                highcorr_thresh = .8,
                                 na_perc = .1)
 
 ## model
 # glmnet_model_objects <- build_glmnet_models(preproc_objects)
 ranger_model_objects <- build_ranger_models(preproc_objects)
+t1 <- Sys.time()
 earth_model_objects <- build_earth_models(preproc_objects)
-
+t2 <- Sys.time()
 ## evaluate
 # glmnet_model_evals <- evaluate_glmnet_models(glmnet_model_objects)
 ranger_model_evals <- evaluate_ranger_models(ranger_model_objects)

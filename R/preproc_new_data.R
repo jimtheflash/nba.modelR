@@ -2,7 +2,7 @@ preproc_new_data <- function(use_case = 'team_games',
                              preproc_objects, new_data) {
 
   if (use_case == 'team_games') {
-browser()
+
     output_list <- list()
 
     # setup some ranges of max and min games for models to be used
